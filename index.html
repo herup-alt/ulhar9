@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT PJOK Kelas IX - Kelincahan Agility Ladder | SMP Bina Bangsa Mandiri</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            900: '#0f172a',
+                            800: '#1e3a8a',
+                            700: '#1d4ed8',
+                            600: '#2563eb',
+                            500: '#3b82f6',
+                            100: '#dbeafe',
+                            50: '#eff6ff'
+                        },
+                        accent: {
+                            600: '#c2410c',
+                            500: '#f97316',
+                            400: '#fb923c',
+                            100: '#ffedd5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cbt-pjok-ladder';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "dummy-api-key",
+            authDomain: "dummy.firebaseapp.com",
+            projectId: "dummy-project",
+            storageBucket: "dummy.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:123456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // Global Firebase functions wrapper
+        window.initFirebaseOnline = async function() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = userCredential.user;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    currentUser = userCredential.user;
+                }
+                console.log("Online Cloud Storage initialized successfully.");
+            } catch (err) {
+                console.warn("Cloud connection error, fallback to offline local storage:", err);
+            }
+        };
+
+        // Function to save exam result to Cloud Firestore
+        window.saveResultToCloud = async function(record) {
+            if (!currentUser) return false;
+            try {
+                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
+                await addDoc(resultsCol, {
+                    ...record,
+                    userId: currentUser.uid,
+                    createdAt: new Date().toISOString()
+                });
+                return true;
+            } catch (err) {
+                console.error("Error saving to cloud:", err);
+                return false;
+            }
+        };
+
+        // Real-time listener for Teacher Dashboard
+        window.subscribeCloudResults = function(callback) {
+            if (!currentUser) return null;
+            try {
+                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
+                return onSnapshot(resultsCol, (snapshot) => {
+                    const cloudData = [];
+                    snapshot.forEach(doc => {
+                        cloudData.push({ cloudId: doc.id, ...doc.data() });
+                    });
+                    // Sort descending by date
+                    cloudData.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                    callback(cloudData);
+                }, (error) => {
+                    console.error("Snapshot error:", error);
+                });
+            } catch (e) {
+                console.error("Error subscribing to results:", e);
+                return null;
+            }
+        };
+
+        // Initialize Firebase on script load
+        window.initFirebaseOnline();
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="h-full bg-slate-100 text-slate-800 flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+    <header class="bg-gradient-to-r from-brand-800 via-blue-900 to-brand-900 text-white shadow-md border-b-4 border-accent-500 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-xl border border-white/20 text-accent-400">
+                    <i class="fa-solid fa-person-running text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs sm:text-sm font-semibold tracking-wider text-blue-200 uppercase">SMP BINA BANGSA MANDIRI</h1>
+                    <p class="text-base sm:text-lg font-bold text-white">CBT PJOK KELAS IX • SEMESTER 1</p>
+                </div>
+            </div>
+            <div class="mt-2 sm:mt-0 flex items-center space-x-3 text-xs sm:text-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10">
+                <span class="text-blue-300 font-medium">Guru Pengampu:</span>
+                <span class="font-bold text-white">Drs. H. HERU PRABOWO</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+
+        <!-- ================= PAGE 1: BERANDA ================= -->
+        <div id="page-beranda" class="space-y-6">
+            <div class="bg-gradient-to-br from-brand-800 to-blue-900 rounded-2xl shadow-xl p-6 sm:p-10 text-white relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+                    <i class="fa-solid fa-shoe-prints"></i>
+                </div>
+                <div class="relative z-10 max-w-3xl">
+                    <span class="bg-accent-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Kurikulum Merdeka • Fase D</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold mt-3 leading-tight">KUIS INTERAKTIF & ASESMEN SUMATIF PJOK</h2>
+                    <p class="text-lg sm:text-xl text-blue-200 mt-2 font-medium">Materi: Latihan Kelincahan Menggunakan Agility Ladder (Tangga Kelincahan)</p>
+                    <p class="text-sm text-blue-100/80 mt-4 leading-relaxed">
+                        Selamat datang di portal CBT mandiri SMP Bina Bangsa Mandiri. Pelajari materi dengan saksama sebelum mengerjakan asesmen sumatif berbobot 100 poin dengan 20 butir soal interaktif.
+                    </p>
+                    
+                    <div class="mt-8 flex flex-wrap gap-3">
+                        <button onclick="switchPage('materi')" class="bg-white text-brand-800 hover:bg-blue-50 font-bold px-5 py-3 rounded-xl shadow transition duration-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-book-open text-blue-600"></i>
+                            <span>MULAI BELAJAR</span>
+                        </button>
+                        <button onclick="switchPage('identitas')" class="bg-accent-500 hover:bg-accent-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-accent-500/30 transition duration-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>MULAI UJIAN CBT</span>
+                        </button>
+                        <button onclick="openModal('modal-petunjuk')" class="bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-4 py-3 rounded-xl transition duration-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>PETUNJUK PENGERJAAN</span>
+                        </button>
+                        <button onclick="openModal('modal-guru-auth')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-semibold px-4 py-3 rounded-xl transition duration-200 flex items-center space-x-2 ml-auto">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <span>DASHBOARD GURU (ONLINE)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Overview Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex items-start space-x-4">
+                    <div class="bg-blue-100 text-blue-700 p-3 rounded-xl text-xl">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">20 Butir Soal Variatif</h3>
+                        <p class="text-sm text-slate-600 mt-1">Pilihan Ganda, Kompleks, Menjodohkan, & Isian Singkat.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex items-start space-x-4">
+                    <div class="bg-orange-100 text-accent-600 p-3 rounded-xl text-xl">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Alokasi Waktu 40 Menit</h3>
+                        <p class="text-sm text-slate-600 mt-1">Dilengkapi timer otomatis dan peringatan waktu hampir habis.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex items-start space-x-4">
+                    <div class="bg-emerald-100 text-emerald-700 p-3 rounded-xl text-xl">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Penilaian Otomatis</h3>
+                        <p class="text-sm text-slate-600 mt-1">Skala 0-100 lengkap dengan umpan balik & pembahasan soal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Goals Preview -->
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-graduation-cap text-blue-600"></i>
+                    <span>Tujuan Pembelajaran Fase D (Kurikulum Merdeka)</span>
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700">
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Menjelaskan pengertian & manfaat kelincahan bagi kebugaran.</span></div>
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Mengenali fungsi dan teknik dasar latihan agility ladder.</span></div>
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Membedakan variasi pola langkah dan koordinasi kaki.</span></div>
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Menerapkan prinsip keselamatan, pemanasan, & pendinginan.</span></div>
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Mengenali kesalahan umum & memperbaiki teknik gerakan.</span></div>
+                    <div class="flex items-start space-x-2"><i class="fa-solid fa-circle-check text-blue-500 mt-1"></i><span>Mengevaluasi pelaksanaan latihan berdasarkan ketepatan & kontrol.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: MATERI RINGKAS ================= -->
+        <div id="page-materi" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchPage('beranda')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl font-bold transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Materi Ringkas: Kelincahan & Agility Ladder</h2>
+                        <p class="text-xs text-slate-500">Modul Belajar Mandiri PJOK Kelas IX Semester 1</p>
+                    </div>
+                </div>
+                <button onclick="switchPage('identitas')" class="bg-accent-500 hover:bg-accent-600 text-white font-bold px-4 py-2.5 rounded-xl shadow transition text-sm flex items-center space-x-2">
+                    <span>LANJUT KE UJIAN</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Content Cards -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-8 text-slate-700">
+                
+                <!-- Section 1 -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-brand-800 flex items-center space-x-3">
+                        <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">1</span>
+                        <span>Pengertian Kelincahan dan Manfaatnya</span>
+                    </h3>
+                    <p class="mt-3 leading-relaxed">
+                        <strong>Kelincahan (Agility)</strong> adalah kemampuan seseorang untuk mengubah posisi dan arah tubuh atau bagian tubuh dengan cepat dan tepat tanpa kehilangan keseimbangan serta kesadaran penuh terhadap posisi tubuhnya. Dalam olahraga, kelincahan sangat menentukan efisiensi gerak saat menghindar, mengubah arah lari, atau bereaksi terhadap rangsangan.
+                    </p>
+                    <div class="mt-4 bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-xl">
+                        <h4 class="font-bold text-blue-900 text-sm">Manfaat Utama Latihan Kelincahan:</h4>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-sm text-blue-800">
+                            <li>Meningkatkan koordinasi neuromuskular (hubungan antara sistem saraf dan otot).</li>
+                            <li>Mempercepat waktu reaksi kaki dan ketepatan melangkah.</li>
+                            <li>Meningkatkan kelenturan sendi engkel, lutut, dan pinggul.</li>
+                            <li>Membantu pencegahan cedera melalui peningkatan kontrol tubuh saat bergerak dinamis.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-brand-800 flex items-center space-x-3">
+                        <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">2</span>
+                        <span>Pengertian dan Fungsi Agility Ladder</span>
+                    </h3>
+                    <p class="mt-3 leading-relaxed">
+                        <strong>Agility Ladder (Tangga Kelincahan)</strong> adalah alat latihan fisik berupa garis-garis kotak sejajar yang menyerupai bentuk tangga horizontal di atas lantai/tanah. Alat ini sangat populer dalam latihan fisik modern karena efektif melatih kecepatan kaki (footwork), frekuensi langkah, koordinasi mata dan kaki, serta keseimbangan dinamis.
+                    </p>
+                    <!-- SVG Ladder Illustration -->
+                    <div class="mt-6 bg-slate-900 p-4 rounded-xl flex flex-col items-center justify-center text-white">
+                        <p class="text-xs text-blue-300 mb-3 font-semibold uppercase tracking-wider">Ilustrasi Pola Dasar Agility Ladder</p>
+                        <svg width="320" height="120" viewBox="0 0 320 120" class="max-w-full">
+                            <!-- Ladder Frame -->
+                            <line x1="20" y1="20" x2="300" y2="20" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="20" y1="100" x2="300" y2="100" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+                            <!-- Rungs -->
+                            <line x1="60" y1="20" x2="60" y2="100" stroke="#3b82f6" stroke-width="3"/>
+                            <line x1="120" y1="20" x2="120" y2="100" stroke="#3b82f6" stroke-width="3"/>
+                            <line x1="180" y1="20" x2="180" y2="100" stroke="#3b82f6" stroke-width="3"/>
+                            <line x1="240" y1="20" x2="240" y2="100" stroke="#3b82f6" stroke-width="3"/>
+                            <!-- Footprints icon representation -->
+                            <circle cx="90" cy="45" r="8" fill="#22c55e" opacity="0.8"/>
+                            <circle cx="90" cy="75" r="8" fill="#ef4444" opacity="0.8"/>
+                            <circle cx="150" cy="45" r="8" fill="#22c55e" opacity="0.8"/>
+                            <circle cx="150" cy="75" r="8" fill="#ef4444" opacity="0.8"/>
+                            <text x="140" y="115" fill="#94a3b8" font-size="10" text-anchor="middle">Arah Gerakan Maju ➔</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-brand-800 flex items-center space-x-3">
+                        <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">3</span>
+                        <span>Teknik Dasar & Variasi Pola Langkah</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-brand-800 text-base">A. 1-In / Single Foot Run (Satu Kaki Setiap Kotak)</h4>
+                            <p class="text-sm mt-1 text-slate-600">Melangkah masuk ke dalam kotak tangga secara bergantian (kanan lalu kiri) dengan tempo cepat dan ujung kaki (ball of the foot) sebagai tumpuan utama.</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-brand-800 text-base">B. 2-In / In-In Out-Out (Dua Kaki Setiap Kotak)</h4>
+                            <p class="text-sm mt-1 text-slate-600">Memasukkan kedua kaki ke dalam setiap kotak secara berurutan (kanan-kiri masuk, lalu kanan-kiri keluar ke samping kotak) dengan ritme stabil.</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-brand-800 text-base">C. Lateral Shuffle (Langkah Menyamping)</h4>
+                            <p class="text-sm mt-1 text-slate-600">Bergerak menyamping melintasi kotak tangga tanpa menyilangkan kaki secara berlebihan, menjaga lutut sedikit menekuk (semi-squat position).</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-brand-800 text-base">D. In and Out (Masuk - Keluar Kotak)</h4>
+                            <p class="text-sm mt-1 text-slate-600">Masuk ke dalam kotak dengan dua kaki, lalu melangkah ke luar sisi kanan dan kiri tangga secara bergantian maju ke depan.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div>
+                    <h3 class="text-xl font-bold text-brand-800 flex items-center space-x-3">
+                        <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">4</span>
+                        <span>Keselamatan, Kesalahan Umum, dan Evaluasi</span>
+                    </h3>
+                    <p class="mt-3 leading-relaxed">
+                        <strong>Catatan Penting:</strong> Kecepatan bukanlah satu-satunya ukuran keberhasilan latihan agility ladder. Ketepatan penempatan kaki, kontrol tubuh, keseimbangan, serta kualitas koordinasi jauh lebih utama daripada sekadar bergerak cepat namun sering menginjak pembatas tangga.
+                    </p>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                            <h4 class="font-bold text-amber-900 text-sm flex items-center space-x-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                                <span>Kesalahan Umum Saat Latihan</span>
+                            </h4>
+                            <ul class="list-disc list-inside mt-2 text-sm text-amber-800 space-y-1">
+                                <li>Bertumpu pada tumit (bukan ujung kaki depan).</li>
+                                <li>Pandangan menunduk terus ke lantai (postur tubuh membungkuk).</li>
+                                <li>Memaksa tempo cepat sebelum menguasai pola langkah dasar.</li>
+                                <li>Kurang melakukan pemanasan dinamis sebelum latihan.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                            <h4 class="font-bold text-emerald-900 text-sm flex items-center space-x-2">
+                                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                                <span>Prinsip Keselamatan & Persiapan</span>
+                            </h4>
+                            <ul class="list-disc list-inside mt-2 text-sm text-emerald-800 space-y-1">
+                                <li>Gunakan sepatu olahraga bersol rata dan tidak licin.</li>
+                                <li>Lakukan di atas permukaan lantai rata atau matras yang aman.</li>
+                                <li>Wajib melakukan pemanasan (stretching dinamis) dan pendinginan.</li>
+                                <li>Hentikan latihan jika merasakan nyeri sendi atau kelelahan berlebih.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: IDENTITAS PESERTA ================= -->
+        <div id="page-identitas" class="hidden max-w-xl mx-auto space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100">
+                    <button onclick="switchPage('beranda')" class="text-slate-500 hover:text-slate-800 transition">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Identitas Peserta Ujian</h2>
+                        <p class="text-xs text-slate-500">Masukkan data diri Anda dengan benar sebelum memulai CBT.</p>
+                    </div>
+                </div>
+
+                <form id="form-identitas" onsubmit="handleIdentitasSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" id="input-nama" required placeholder="Contoh: Ahmad Rizki Pratama" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+                        <select id="input-kelas" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 font-medium bg-white">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="IX-A">IX-A</option>
+                            <option value="IX-B">IX-B</option>
+                            <option value="IX-C">IX-C</option>
+                            <option value="IX-D">IX-D</option>
+                            <option value="IX-E">IX-E</option>
+                            <option value="IX-F">IX-F</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Nomor Absen</label>
+                        <input type="number" id="input-absen" min="1" max="50" placeholder="Contoh: 14" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Ujian (Opsional)</label>
+                        <input type="text" id="input-kode" placeholder="Masukkan kode jika diberikan guru" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 font-medium uppercase">
+                    </div>
+                    <button type="submit" class="w-full mt-4 bg-accent-500 hover:bg-accent-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-accent-500/30 transition duration-200 flex items-center justify-center space-x-2">
+                        <span>LANJUT KE PETUNJUK UJIAN</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 4: PETUNJUK UJIAN ================= -->
+        <div id="page-petunjuk" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+                <div class="flex items-center space-x-3 pb-4 border-b border-slate-100">
+                    <button onclick="switchPage('identitas')" class="text-slate-500 hover:text-slate-800 transition">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Petunjuk Pengerjaan Ujian</h2>
+                        <p class="text-xs text-slate-500">Baca ketentuan berikut dengan teliti sebelum menekan tombol mulai.</p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <span class="block text-xs text-blue-600 font-semibold">Jumlah Soal</span>
+                        <span class="text-xl font-extrabold text-blue-900">20 Butir</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-blue-600 font-semibold">Waktu Ujian</span>
+                        <span class="text-xl font-extrabold text-blue-900">40 Menit</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-blue-600 font-semibold">Nilai Maksimal</span>
+                        <span class="text-xl font-extrabold text-blue-900">100 Poin</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-blue-600 font-semibold">Batas Ketuntasan</span>
+                        <span class="text-xl font-extrabold text-blue-900">75 Poin</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-sm text-slate-700">
+                    <h3 class="font-bold text-slate-900">Ketentuan Pengisian Jawaban:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-slate-600">
+                        <li><strong>Soal 1–8 (Pilihan Ganda):</strong> Pilih satu jawaban yang paling tepat. Bobot @4 poin (Total 32).</li>
+                        <li><strong>Soal 9–13 (Pilihan Ganda Kompleks):</strong> Pilih lebih dari satu jawaban yang benar sesuai instruksi soal. Bobot @6 poin (Total 30).</li>
+                        <li><strong>Soal 14–16 (Menjodohkan):</strong> Pasangkan pernyataan di kolom kiri dengan jawaban yang sesuai di kolom kanan. Bobot @6 poin (Total 18).</li>
+                        <li><strong>Soal 17–20 (Isian Singkat):</strong> Ketik jawaban singkat yang akurat pada kolom teks yang disediakan. Bobot @5 poin (Total 20).</li>
+                    </ul>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-800 space-y-1">
+                    <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Perhatian Penting:</p>
+                    <p>Sistem akan meminta mode layar penuh (fullscreen) saat ujian dimulai. Hindari keluar dari tab atau menekan tombol keluar layar penuh agar tidak tercatat sebagai peringatan pengawasan oleh sistem.</p>
+                </div>
+
+                <button onclick="startExamSession()" class="w-full bg-accent-500 hover:bg-accent-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-accent-500/30 transition duration-200 flex items-center justify-center space-x-2 text-base">
+                    <i class="fa-solid fa-play"></i>
+                    <span>MULAI UJIAN SEKARANG (LAYAR PENUH)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 5: LEMBAR UJIAN CBT ================= -->
+        <div id="page-ujian" class="hidden space-y-6">
+            <!-- Top Exam Bar -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap justify-between items-center gap-4 sticky top-16 z-40">
+                <div>
+                    <span id="exam-student-info" class="font-bold text-slate-900 text-sm block">Siswa: - (Kelas -)</span>
+                    <span class="text-xs text-slate-500">Asesmen Sumatif PJOK • Agility Ladder</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="timer-box" class="bg-red-50 text-red-700 border border-red-200 px-4 py-2 rounded-xl font-mono font-bold text-base flex items-center space-x-2">
+                        <i class="fa-solid fa-clock animate-pulse"></i>
+                        <span id="timer-display">40:00</span>
+                    </div>
+                    <button onclick="confirmSubmitExam()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow transition text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>KUMPULKAN</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Exam Layout Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Question Container (Left 3 cols) -->
+                <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col justify-between min-h-[450px]">
+                    <div id="question-card-container">
+                        <!-- Dynamic Question Loaded Here -->
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="flex justify-between items-center pt-6 mt-6 border-t border-slate-100">
+                        <button onclick="prevQuestion()" id="btn-prev" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl transition text-sm flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>Sebelumnya</span>
+                        </button>
+                        <span id="question-progress-indicator" class="text-xs font-bold text-slate-500">Soal 1 dari 20</span>
+                        <button onclick="nextQuestion()" id="btn-next" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm flex items-center space-x-2">
+                            <span>Berikutnya</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Navigator Sidebar (Right 1 col) -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 h-fit">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
+                        <span>Navigasi Nomor Soal</span>
+                        <span class="text-xs text-slate-500 font-normal">Klik untuk lompat</span>
+                    </h3>
+                    <div id="question-nav-grid" class="grid grid-cols-5 gap-2">
+                        <!-- Dynamic Number Buttons -->
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 text-xs space-y-2 text-slate-600">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded bg-blue-600 inline-block"></span>
+                            <span>Sudah dijawab</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded bg-slate-200 border border-slate-300 inline-block"></span>
+                            <span>Belum dijawab</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 6 & 7: HASIL & PEMBAHASAN ================= -->
+        <div id="page-hasil" class="hidden space-y-6 max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+                <!-- Header Result -->
+                <div class="text-center pb-6 border-b border-slate-200 space-y-2">
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Asesmen Selesai</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Hasil Asesmen Sumatif PJOK</h2>
+                    <p class="text-sm text-slate-600">Laporan Hasil Pengerjaan Tes Kelincahan Agility Ladder</p>
+                </div>
+
+                <!-- Student Summary Details -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+                    <div>
+                        <span class="block text-xs text-slate-500 font-semibold">Nama Siswa</span>
+                        <span id="res-nama" class="font-bold text-slate-900">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500 font-semibold">Kelas</span>
+                        <span id="res-kelas" class="font-bold text-slate-900">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500 font-semibold">Nomor Absen</span>
+                        <span id="res-absen" class="font-bold text-slate-900">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500 font-semibold">Waktu Pengerjaan</span>
+                        <span id="res-waktu" class="font-bold text-slate-900">-</span>
+                    </div>
+                </div>
+
+                <!-- Score Highlight Box -->
+                <div class="bg-gradient-to-r from-brand-800 to-blue-900 text-white p-6 rounded-2xl flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Nilai Akhir Skala 0-100</span>
+                        <div class="text-4xl sm:text-6xl font-extrabold mt-1 text-accent-400" id="res-nilai">0</div>
+                    </div>
+                    <div class="space-y-2 text-right">
+                        <span id="res-badge-status" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">TUNTAS</span>
+                        <p class="text-xs text-blue-100" id="res-kategori">Kategori: Sangat Baik</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Stats Grid -->
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                        <span class="block text-xs font-bold text-emerald-600 uppercase">Jawaban Benar</span>
+                        <span id="res-benar" class="text-2xl font-extrabold text-emerald-800">0</span>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
+                        <span class="block text-xs font-bold text-red-600 uppercase">Jawaban Salah</span>
+                        <span id="res-salah" class="text-2xl font-extrabold text-red-800">0</span>
+                    </div>
+                    <div class="bg-slate-100 border border-slate-200 p-4 rounded-xl">
+                        <span class="block text-xs font-bold text-slate-600 uppercase">Tidak Dijawab</span>
+                        <span id="res-kosong" class="text-2xl font-extrabold text-slate-800">0</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 pt-4 border-t border-slate-200 justify-between">
+                    <button onclick="switchPage('beranda')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-3 rounded-xl transition text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-house"></i>
+                        <span>KEMBALI KE BERANDA</span>
+                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-print"></i>
+                            <span>CETAK HASIL</span>
+                        </button>
+                        <button onclick="togglePembahasanView()" id="btn-toggle-pembahasan" class="bg-accent-500 hover:bg-accent-600 text-white font-bold px-5 py-3 rounded-xl transition text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>LIHAT PEMBAHASAN SOAL</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pembahasan Section (Hidden by Default) -->
+                <div id="pembahasan-container" class="hidden space-y-6 pt-6 border-t-2 border-dashed border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-book-bookmark text-blue-600"></i>
+                        <span>Pembahasan Lengkap & Kunci Jawaban</span>
+                    </h3>
+                    <div id="pembahasan-list" class="space-y-6">
+                        <!-- Dynamic Pembahasan Items -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= DASHBOARD GURU MODAL ================= -->
+    <div id="modal-guru-auth" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-brand-800"></i>
+                    <span>Autorisasi Dashboard Guru</span>
+                </h3>
+                <button onclick="closeModal('modal-guru-auth')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-sm text-slate-600">Masukkan kode akses guru untuk membuka rekapitulasi nilai dan analisis butir soal.</p>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Akses Guru</label>
+                <input type="password" id="input-kode-guru" placeholder="Masukkan kode (default: BBN2026)" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none">
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeModal('modal-guru-auth')" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm font-semibold">Batal</button>
+                <button onclick="verifyGuruAccess()" class="px-5 py-2.5 rounded-xl bg-brand-800 hover:bg-brand-900 text-white text-sm font-bold shadow">Buka Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DASHBOARD GURU PANEL MODAL/PAGE ================= -->
+    <div id="modal-dashboard-guru" class="fixed inset-0 bg-slate-900 z-50 hidden overflow-y-auto custom-scrollbar p-4 sm:p-8 flex flex-col">
+        <div class="max-w-7xl w-full mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 flex-grow flex flex-col space-y-6">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+                <div>
+                    <span class="text-xs font-bold text-accent-600 uppercase tracking-wider">Panel Pengelola Guru • SMP Bina Bangsa Mandiri</span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Dashboard & Analisis Asesmen Sumatif PJOK</h2>
+                </div>
+                <button onclick="closeModal('modal-dashboard-guru')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl font-bold transition flex items-center space-x-2">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Tutup Dashboard</span>
+                </button>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                    <span class="block text-xs font-bold text-blue-600 uppercase">Total Peserta</span>
+                    <span id="dash-total-peserta" class="text-2xl font-extrabold text-blue-900">0</span>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                    <span class="block text-xs font-bold text-emerald-600 uppercase">Rata-Rata Kelas</span>
+                    <span id="dash-rata-rata" class="text-2xl font-extrabold text-emerald-800">0</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                    <span class="block text-xs font-bold text-amber-600 uppercase">Nilai Tertinggi / Terendah</span>
+                    <span id="dash-max-min" class="text-xl font-extrabold text-amber-800">0 / 0</span>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl">
+                    <span class="block text-xs font-bold text-purple-600 uppercase">Persentase Ketuntasan</span>
+                    <span id="dash-ketuntasan" class="text-2xl font-extrabold text-purple-800">0%</span>
+                </div>
+            </div>
+
+            <!-- Table & Export Tools -->
+            <div class="space-y-4 flex-grow">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center space-x-2">
+                        <h3 class="font-bold text-slate-900 text-lg">Rekapitulasi Nilai Siswa Daring</h3>
+                        <span id="cloud-status-badge" class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold flex items-center space-x-1">
+                            <i class="fa-solid fa-signal text-xs"></i>
+                            <span>Cloud Live</span>
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center space-x-2 shadow">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Ekspor CSV</span>
+                        </button>
+                        <button onclick="clearLocalStorageData()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold px-4 py-2 rounded-xl text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Reset Data Lokal</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">No</th>
+                                <th class="p-3">Nama Siswa</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Absen</th>
+                                <th class="p-3">Nilai</th>
+                                <th class="p-3">Benar / Salah</th>
+                                <th class="p-3">Waktu Selesai</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-table-body" class="divide-y divide-slate-200">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PETUNJUK MODAL ================= -->
+    <div id="modal-petunjuk" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Petunjuk Pengerjaan CBT PJOK</h3>
+                <button onclick="closeModal('modal-petunjuk')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-600">
+                <p>1. Aplikasi ini dirancang untuk asesmen sumatif PJOK materi Kelincahan Agility Ladder Kelas IX Semester 1.</p>
+                <p>2. Soal berjumlah 20 butir dengan kombinasi Pilihan Ganda, Pilihan Ganda Kompleks, Menjodohkan, dan Isian Singkat.</p>
+                <p>3. Waktu pengerjaan adalah 40 menit dan akan dihitung mundur otomatis.</p>
+                <p>4. Data hasil tersimpan aman pada penyimpanan lokal browser perangkat Anda.</p>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal('modal-petunjuk')" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CUSTOM MESSAGE BOX MODAL ================= -->
+    <div id="modal-message" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+            <div id="msg-icon" class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="msg-title" class="font-bold text-lg text-slate-900">Informasi</h3>
+            <p id="msg-text" class="text-sm text-slate-600">Pesan sistem...</p>
+            <div id="msg-actions" class="flex justify-center space-x-3 pt-2">
+                <button onclick="closeModal('modal-message')" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow w-full">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = { nama: '', kelas: '', absen: '', kode: '' };
+        let currentQuestionIndex = 0;
+        let studentAnswers = {}; // questionId -> answer
+        let timerInterval = null;
+        let timeLeft = 40 * 60; // 40 minutes in seconds
+        let examSubmitted = false;
+
+        // Question Bank - Exactly 20 Questions
+        const questions = [
+            // Pilihan Ganda (1 - 8)
+            {
+                id: 1,
+                type: 'pg',
+                text: 'Kemampuan seseorang untuk mengubah posisi dan arah tubuh atau bagian tubuh dengan cepat dan tepat tanpa kehilangan keseimbangan disebut...',
+                options: [
+                    'Daya tahan (Endurance)',
+                    'Kelincahan (Agility)',
+                    'Kekuatan (Strength)',
+                    'Kelenturan (Flexibility)'
+                ],
+                key: 1, // index 1 = Kelincahan (Agility)
+                tp: 'Siswa mampu menjelaskan pengertian kelincahan.',
+                pembahasan: 'Kelincahan (agility) adalah kemampuan mengubah arah dan posisi tubuh secara cepat dan akurat tanpa kehilangan keseimbangan.'
+            },
+            {
+                id: 2,
+                type: 'pg',
+                text: 'Manfaat utama latihan kelincahan menggunakan agility ladder bagi kebugaran jasmani siswa adalah...',
+                options: [
+                    'Meningkatkan massa otot dada secara maksimal',
+                    'Menambah berat badan secara cepat',
+                    'Meningkatkan koordinasi neuromuskular dan kecepatan kaki',
+                    'Menurunkan denyut nadi istirahat hingga nol'
+                ],
+                key: 2,
+                tp: 'Siswa mampu menjelaskan manfaat latihan kelincahan bagi kebugaran jasmani.',
+                pembahasan: 'Latihan agility ladder melatih koordinasi neuromuskular (hubungan saraf dan otot) serta kecepatan reaksi dan frekuensi kaki.'
+            },
+            {
+                id: 3,
+                type: 'pg',
+                text: 'Alat fisik berupa garis-garis kotak sejajar yang menyerupai tangga horizontal di lantai disebut...',
+                options: [
+                    'Pull-up bar',
+                    'Agility ladder',
+                    'Parallel bars',
+                    'Balance beam'
+                ],
+                key: 1,
+                tp: 'Siswa mampu mengenali fungsi agility ladder.',
+                pembahasan: 'Agility ladder (tangga kelincahan) adalah alat latihan footwork berbentuk tangga horizontal di lantai.'
+            },
+            {
+                id: 4,
+                type: 'pg',
+                text: 'Bagian kaki manakah yang paling tepat digunakan sebagai tumpuan utama saat melangkah di dalam agility ladder agar gerakan lebih ringan dan cepat?',
+                options: [
+                    'Tumit kaki (heel)',
+                    'Sisi luar telapak kaki',
+                    'Ujung kaki / bola kaki (ball of the foot)',
+                    'Seluruh telapak kaki secara datar'
+                ],
+                key: 2,
+                tp: 'Siswa mampu mengidentifikasi teknik dasar latihan agility ladder.',
+                pembahasan: 'Tumpuan pada bagian ujung kaki atau bola kaki membuat pegas alami kaki berfungsi optimal dan mempercepat langkah.'
+            },
+            {
+                id: 5,
+                type: 'pg',
+                text: 'Dalam teknik latihan 2-in (dua kaki setiap kotak), pola gerakan yang benar adalah...',
+                options: [
+                    'Memasukkan hanya satu kaki secara bergantian maju ke depan',
+                    'Memasukkan kedua kaki ke dalam setiap kotak secara berurutan',
+                    'Melompati seluruh kotak tangga tanpa menginjak bagian dalam',
+                    'Berjalan mundur melewati seluruh tangga'
+                ],
+                key: 1,
+                tp: 'Siswa mampu membedakan variasi pola langkah dalam latihan ladder.',
+                pembahasan: 'Teknik 2-in mengharuskan kedua kaki masuk ke dalam setiap kotak secara berurutan sebelum berpindah ke kotak berikutnya.'
+            },
+            {
+                id: 6,
+                type: 'pg',
+                text: 'Faktor yang menunjukkan hubungan harmonis antara sistem saraf dan otot kaki saat melakukan latihan ladder disebut...',
+                options: [
+                    'Koordinasi (Coordination)',
+                    'Daya ledak (Explosive power)',
+                    'Kecepatan statis',
+                    'Komposisi tubuh'
+                ],
+                key: 0,
+                tp: 'Siswa mampu menjelaskan koordinasi kaki, keseimbangan, dan kontrol tubuh.',
+                pembahasan: 'Koordinasi melibatkan sinkronisasi perintah saraf dengan kontraksi otot secara tepat waktu dan terarah.'
+            },
+            {
+                id: 7,
+                type: 'pg',
+                text: 'Sebelum memulai latihan inti menggunakan agility ladder, langkah persiapan fisik yang wajib dilakukan adalah...',
+                options: [
+                    'Langsung berlari dengan kecepatan maksimal',
+                    'Melakukan pemanasan dinamis (dynamic stretching)',
+                    'Minum air es sebanyak mungkin',
+                    'Langsung melakukan pendinginan statis'
+                ],
+                key: 1,
+                tp: 'Siswa mampu memahami pemanasan, pendinginan, dan pemulihan.',
+                pembahasan: 'Pemanasan dinamis mempersiapkan sendi, otot, dan sistem kardiovaskular serta mencegah cedera.'
+            },
+            {
+                id: 8,
+                type: 'pg',
+                text: 'Kesalahan umum yang sering dilakukan siswa saat latihan agility ladder adalah...',
+                options: [
+                    'Menjaga pandangan tetap lurus ke depan',
+                    'Bertumpu pada ujung kaki',
+                    'Pandangan selalu menunduk ke bawah dan tubuh terlalu membungkuk',
+                    'Mengontrol ritme pernapasan dengan baik'
+                ],
+                key: 2,
+                tp: 'Siswa mampu mengenali kesalahan gerakan dan cara memperbaikinya.',
+                pembahasan: 'Menunduk terus membuat keseimbangan terganggu; pandangan sebaiknya sedikit ke depan untuk postur tegak.'
+            },
+
+            // Pilihan Ganda Kompleks (9 - 13)
+            {
+                id: 9,
+                type: 'pgk',
+                text: 'Pilihlah DUA prinsip keselamatan yang benar saat menggunakan agility ladder! (Pilih 2 jawaban)',
+                options: [
+                    'Menggunakan sepatu olahraga bersol rata dan tidak licin',
+                    'Melakukan latihan di atas lantai licin atau berpasir lepas',
+                    'Memastikan area sekitar tangga bebas dari benda berbahaya',
+                    'Memaksakan kecepatan maksimal tanpa memperhatikan teknik'
+                ],
+                keys: [0, 2], // 0 and 2 are correct
+                tp: 'Siswa mampu menerapkan prinsip keselamatan saat latihan.',
+                pembahasan: 'Sepatu yang sesuai dan area bersih mencegah risiko terpeleset atau cedera.'
+            },
+            {
+                id: 10,
+                type: 'pgk',
+                text: 'Manakah DUA variasi pola langkah yang umum dipelajari dalam latihan agility ladder? (Pilih 2 jawaban)',
+                options: [
+                    'Single foot run (1-in)',
+                    'Renang gaya dada jarak jauh',
+                    'Lateral shuffle (Langkah menyamping)',
+                    'Angkat beban barbell berat'
+                ],
+                keys: [0, 2],
+                tp: 'Siswa mampu mengidentifikasi teknik dasar latihan agility ladder.',
+                pembahasan: 'Single foot run dan lateral shuffle adalah variasi standar dalam latihan ladder.'
+            },
+            {
+                id: 11,
+                type: 'pgk',
+                text: 'Pilihlah DUA indikator keberhasilan latihan agility ladder yang baik bagi siswa SMP! (Pilih 2 jawaban)',
+                options: [
+                    'Ketepatan penempatan kaki di dalam kotak tangga',
+                    'Kecepatan ekstrem meskipun sering menginjak pembatas',
+                    'Kontrol keseimbangan dan postur tubuh yang baik',
+                    'Jumlah keringat yang keluar paling banyak'
+                ],
+                keys: [0, 2],
+                tp: 'Siswa mampu mengevaluasi pelaksanaan latihan berdasarkan ketepatan gerakan, kontrol tubuh, dan kualitas koordinasi.',
+                pembahasan: 'Ketepatan dan kontrol tubuh lebih diutamakan daripada sekadar kecepatan tanpa aturan.'
+            },
+            {
+                id: 12,
+                type: 'pgk',
+                text: 'Pilihlah DUA manfaat melakukan pendinginan (cooling down) setelah latihan kelincahan! (Pilih 2 jawaban)',
+                options: [
+                    'Menurunkan denyut jantung secara bertahap',
+                    'Meningkatkan ketegangan otot secara drastis',
+                    'Membantu pemulihan asam laktat dan mencegah kaku otot',
+                    'Membuat tubuh langsung tertidur lelap'
+                ],
+                keys: [0, 2],
+                tp: 'Siswa mampu memahami pemanasan, pendinginan, dan pemulihan.',
+                pembahasan: 'Pendinginan menurunkan detak jantung secara aman dan mengurangi risiko nyeri otot pasca latihan.'
+            },
+            {
+                id: 13,
+                type: 'pgk',
+                text: 'Pilihlah DUA tanda bahwa siswa perlu beristirahat sejenak saat latihan kelincahan! (Pilih 2 jawaban)',
+                options: [
+                    'Merasakan nyeri tajam pada persendian kaki',
+                    'Napas tersenggal-senggal berat dan pusing',
+                    'Semangat belajar yang semakin tinggi',
+                    'Fokus gerakan yang semakin meningkat'
+                ],
+                keys: [0, 1],
+                tp: 'Siswa mampu menerapkan prinsip keselamatan saat latihan.',
+                pembahasan: 'Nyeri sendi atau pusing adalah indikator fisik untuk segera menghentikan latihan.'
+            },
+
+            // Menjodohkan (14 - 16)
+            {
+                id: 14,
+                type: 'match',
+                text: 'Jodohkan istilah gerakan latihan agility ladder dengan deskripsinya yang tepat!',
+                pairs: [
+                    { id: 'p1', left: 'Single Foot Run', right: 'Melangkah satu kaki tiap kotak secara bergantian' },
+                    { id: 'p2', left: 'Lateral Shuffle', right: 'Gerakan melangkah menyamping melintasi kotak tangga' },
+                    { id: 'p3', left: 'In and Out', right: 'Masuk ke kotak lalu melangkah ke luar sisi samping' }
+                ],
+                tp: 'Siswa mampu membedakan variasi pola langkah dalam latihan ladder.',
+                pembahasan: 'Setiap variasi memiliki pola langkah spesifik untuk melatih sisi koordinasi yang berbeda.'
+            },
+            {
+                id: 15,
+                type: 'match',
+                text: 'Jodohkan komponen kebugaran jasmani / latihan dengan penjelasannya!',
+                pairs: [
+                    { id: 'p1', left: 'Agility Ladder', right: 'Alat latihan untuk kecepatan kaki dan koordinasi' },
+                    { id: 'p2', left: 'Dynamic Stretching', right: 'Peregangan aktif sebelum inti latihan' },
+                    { id: 'p3', left: 'Cooling Down', right: 'Pemulihan tubuh setelah aktivitas fisik' }
+                ],
+                tp: 'Siswa mampu mengenali fungsi agility ladder dan prinsip latihan.',
+                pembahasan: 'Pengenalan alat dan tahapan latihan merupakan bagian dari pemahaman teori PJOK.'
+            },
+            {
+                id: 16,
+                type: 'match',
+                text: 'Jodohkan aspek evaluasi latihan dengan fokus pengamatannya!',
+                pairs: [
+                    { id: 'p1', left: 'Ketepatan Langkah', right: 'Tidak menginjak garis atau pembatas tangga' },
+                    { id: 'p2', left: 'Kontrol Tubuh', right: 'Menjaga postur tetap seimbang saat bergerak' },
+                    { id: 'p3', left: 'Frekuensi Gerak', right: 'Kecepatan perpindahan kaki yang stabil' }
+                ],
+                tp: 'Siswa mampu mengevaluasi pelaksanaan latihan berdasarkan ketepatan gerakan.',
+                pembahasan: 'Evaluasi latihan mencakup akurasi, keseimbangan, dan ritme gerakan.'
+            },
+
+            // Isian Singkat (17 - 20)
+            {
+                id: 17,
+                type: 'isian',
+                text: 'Alat latihan berupa tangga horizontal yang diletakkan di lantai untuk melatih kecepatan kaki disebut ...',
+                keys: ['agility ladder', 'tangga kelincahan', 'agility ladder (tangga kelincahan)'],
+                tp: 'Siswa mampu mengenali fungsi agility ladder.',
+                pembahasan: 'Nama alat tersebut adalah Agility Ladder atau tangga kelincahan.'
+            },
+            {
+                id: 18,
+                type: 'isian',
+                text: 'Bagian telapak kaki yang digunakan sebagai tumpuan utama agar gerakan melangkah terasa ringan adalah ...',
+                keys: ['ujung kaki', 'bola kaki', 'ball of the foot', 'ujung kaki / bola kaki'],
+                tp: 'Siswa mampu mengidentifikasi teknik dasar latihan agility ladder.',
+                pembahasan: 'Tumpuan yang benar berada pada bagian ujung kaki atau bola kaki.'
+            },
+            {
+                id: 19,
+                type: 'isian',
+                text: 'Peregangan yang dilakukan dengan menggerakkan anggota tubuh secara aktif sebelum latihan inti disebut pemanasan ...',
+                keys: ['dinamis', 'pemanasan dinamis'],
+                tp: 'Siswa mampu memahami pemanasan, pendinginan, dan pemulihan.',
+                pembahasan: 'Pemanasan sebelum latihan inti kelincahan adalah pemanasan dinamis.'
+            },
+            {
+                id: 20,
+                type: 'isian',
+                text: 'Kemampuan mengubah arah dan posisi tubuh dengan cepat dan tepat dinamakan ...',
+                keys: ['kelincahan', 'agility'],
+                tp: 'Siswa mampu menjelaskan pengertian kelincahan.',
+                pembahasan: 'Istilah teknis untuk kemampuan tersebut adalah kelincahan (agility).'
+            }
+        ];
+
+        let shuffledQuestions = [];
+
+        function switchPage(pageId) {
+            document.getElementById('page-beranda').classList.add('hidden');
+            document.getElementById('page-materi').classList.add('hidden');
+            document.getElementById('page-identitas').classList.add('hidden');
+            document.getElementById('page-petunjuk').classList.add('hidden');
+            document.getElementById('page-ujian').classList.add('hidden');
+            document.getElementById('page-hasil').classList.add('hidden');
+
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function showMessage(title, text, type = 'info') {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-text').innerText = text;
+            const iconBox = document.getElementById('msg-icon');
+            if (type === 'error') {
+                iconBox.className = 'w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl';
+                iconBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else if (type === 'success') {
+                iconBox.className = 'w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl';
+                iconBox.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                iconBox.className = 'w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl';
+                iconBox.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+            openModal('modal-message');
+        }
+
+        function handleIdentitasSubmit(e) {
+            e.preventDefault();
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value;
+            const absen = document.getElementById('input-absen').value;
+            const kode = document.getElementById('input-kode').value.trim();
+
+            if (!nama || !kelas) {
+                showMessage('Perhatian', 'Nama lengkap dan kelas wajib diisi!', 'error');
+                return;
+            }
+
+            currentStudent = { nama, kelas, absen: absen || '-', kode: kode || '-' };
+            switchPage('petunjuk');
+        }
+
+        function startExamSession() {
+            // Request Fullscreen
+            try {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => console.log('Fullscreen request ignored'));
+                }
+            } catch (e) {
+                console.log('Fullscreen not supported');
+            }
+
+            // Shuffle questions and options
+            shuffledQuestions = JSON.parse(JSON.stringify(questions));
+            // Shuffle questions array
+            shuffledQuestions.sort(() => Math.random() - 0.5);
+
+            // Shuffle options for PG questions
+            shuffledQuestions.forEach(q => {
+                if (q.type === 'pg') {
+                    let optionsWithIndex = q.options.map((opt, idx) => ({ opt, idx }));
+                    optionsWithIndex.sort(() => Math.random() - 0.5);
+                    q.shuffledOptions = optionsWithIndex.map(item => item.opt);
+                    q.shuffledKeyMap = optionsWithIndex.map(item => item.idx); // maps new index to old index
+                }
+            });
+
+            currentQuestionIndex = 0;
+            studentAnswers = {};
+            examSubmitted = false;
+
+            document.getElementById('exam-student-info').innerText = `Siswa: ${currentStudent.nama} (${currentStudent.kelas} - Absen: ${currentStudent.absen})`;
+            
+            switchPage('ujian');
+            renderCurrentQuestion();
+            renderQuestionNav();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 40 * 60;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    autoSubmitExam();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (timeLeft <= 300) { // 5 minutes warning
+                document.getElementById('timer-box').className = 'bg-red-600 text-white border border-red-700 px-4 py-2 rounded-xl font-mono font-bold text-base flex items-center space-x-2 animate-bounce';
+            }
+        }
+
+        function renderCurrentQuestion() {
+            const q = shuffledQuestions[currentQuestionIndex];
+            const container = document.getElementById('question-card-container');
+            
+            let html = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Soal No. ${currentQuestionIndex + 1} dari 20 (${getQuestionTypeLabel(q.type)})</span>
+                        <span class="text-xs text-slate-500 font-medium">TP: ${q.tp}</span>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed">${q.text}</h3>
+            `;
+
+            if (q.type === 'pg') {
+                html += `<div class="space-y-3 pt-2">`;
+                q.shuffledOptions.forEach((opt, idx) => {
+                    const originalIdx = q.shuffledKeyMap[idx];
+                    const isChecked = studentAnswers[q.id] === originalIdx ? 'checked' : '';
+                    const borderClass = isChecked ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 hover:bg-slate-50';
+                    html += `
+                        <label class="flex items-start space-x-3 p-3.5 rounded-xl border ${borderClass} cursor-pointer transition">
+                            <input type="radio" name="q_${q.id}" value="${originalIdx}" ${isChecked} onchange="saveAnswer(${q.id}, ${originalIdx})" class="mt-1 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-slate-800 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            } else if (q.type === 'pgk') {
+                html += `<p class="text-xs text-accent-600 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Pilihan Ganda Kompleks: Pilih lebih dari satu jawaban yang benar.</p>`;
+                html += `<div class="space-y-3 pt-2">`;
+                q.options.forEach((opt, idx) => {
+                    const currentSelected = studentAnswers[q.id] || [];
+                    const isChecked = currentSelected.includes(idx) ? 'checked' : '';
+                    html += `
+                        <label class="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" name="q_${q.id}" value="${idx}" ${isChecked} onchange="saveCheckboxAnswer(${q.id}, ${idx})" class="mt-1 text-blue-600 rounded focus:ring-blue-500">
+                            <span class="text-sm text-slate-800 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            } else if (q.type === 'match') {
+                html += `<p class="text-xs text-accent-600 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Menjodohkan: Pasangkan pernyataan dengan pilihan jawaban yang sesuai.</p>`;
+                html += `<div class="space-y-4 pt-2">`;
+                q.pairs.forEach((pair, pIdx) => {
+                    const currentMatch = studentAnswers[q.id] || {};
+                    const selectedVal = currentMatch[pair.id] || '';
+                    html += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                            <span class="text-xs font-bold text-brand-800 block">${pIdx + 1}. ${pair.left}</span>
+                            <select onchange="saveMatchAnswer(${q.id}, '${pair.id}', this.value)" class="w-full p-2.5 rounded-lg border border-slate-300 text-sm bg-white font-medium">
+                                <option value="">-- Pilih Pasangan yang Sesuai --</option>
+                                ${q.pairs.map(p => `<option value="${p.right}" ${selectedVal === p.right ? 'selected' : ''}>${p.right}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            } else if (q.type === 'isian') {
+                const currentVal = studentAnswers[q.id] || '';
+                html += `
+                    <div class="pt-2">
+                        <input type="text" value="${currentVal}" oninput="saveAnswer(${q.id}, this.value)" placeholder="Ketik jawaban singkat di sini..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 font-medium text-sm">
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            document.getElementById('question-progress-indicator').innerText = `Soal ${currentQuestionIndex + 1} dari 20`;
+            document.getElementById('btn-prev').disabled = currentQuestionIndex === 0;
+            const btnNext = document.getElementById('btn-next');
+            if (currentQuestionIndex === shuffledQuestions.length - 1) {
+                btnNext.innerHTML = `<span>Selesai / Cek</span> <i class="fa-solid fa-check"></i>`;
+                btnNext.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm flex items-center space-x-2";
+            } else {
+                btnNext.innerHTML = `<span>Berikutnya</span> <i class="fa-solid fa-arrow-right"></i>`;
+                btnNext.className = "bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm flex items-center space-x-2";
+            }
+        }
+
+        function getQuestionTypeLabel(type) {
+            if (type === 'pg') return 'Pilihan Ganda';
+            if (type === 'pgk') return 'Pilihan Ganda Kompleks';
+            if (type === 'match') return 'Menjodohkan';
+            if (type === 'isian') return 'Isian Singkat';
+            return 'Soal';
+        }
+
+        function renderQuestionNav() {
+            const grid = document.getElementById('question-nav-grid');
+            let html = '';
+            shuffledQuestions.forEach((q, idx) => {
+                const isAnswered = studentAnswers[q.id] !== undefined && studentAnswers[q.id] !== '' && (Array.isArray(studentAnswers[q.id]) ? studentAnswers[q.id].length > 0 : true);
+                const isCurrent = currentQuestionIndex === idx;
+                
+                let btnClass = "w-full py-2.5 rounded-xl font-bold text-xs transition border ";
+                if (isCurrent) {
+                    btnClass += "ring-2 ring-accent-500 ";
+                }
+                if (isAnswered) {
+                    btnClass += "bg-blue-600 text-white border-blue-600 shadow-sm";
+                } else {
+                    btnClass += "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200";
+                }
+
+                html += `<button onclick="goToQuestion(${idx})" class="${btnClass}">${idx + 1}</button>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        function saveAnswer(qId, val) {
+            studentAnswers[qId] = val;
+            renderQuestionNav();
+        }
+
+        function saveCheckboxAnswer(qId, idx) {
+            if (!studentAnswers[qId]) studentAnswers[qId] = [];
+            const arr = studentAnswers[qId];
+            const pos = arr.indexOf(idx);
+            if (pos > -1) {
+                arr.splice(pos, 1);
+            } else {
+                arr.push(idx);
+            }
+            renderQuestionNav();
+        }
+
+        function saveMatchAnswer(qId, pairId, val) {
+            if (!studentAnswers[qId]) studentAnswers[qId] = {};
+            studentAnswers[qId][pairId] = val;
+            renderQuestionNav();
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestionConentWithScroll();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestionConentWithScroll();
+            } else {
+                confirmSubmitExam();
+            }
+        }
+
+        function goToQuestion(idx) {
+            currentQuestionIndex = idx;
+            renderQuestionConentWithScroll();
+        }
+
+        function renderQuestionConentWithScroll() {
+            renderCurrentQuestion();
+            renderQuestionNav();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function confirmSubmitExam() {
+            let unanswered = 0;
+            shuffledQuestions.forEach(q => {
+                const ans = studentAnswers[q.id];
+                if (ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0) || (q.type === 'match' && (typeof ans !== 'object' || Object.keys(ans).length < (q.pairs ? q.pairs.length : 0)))) {
+                    unanswered++;
+                }
+            });
+
+            let msg = "Apakah Anda yakin ingin mengumpulkan jawaban ujian?";
+            if (unanswered > 0) {
+                msg = `Perhatian: Masih ada ${unanswered} soal yang belum dijawab. Tetap ingin mengumpulkan?`;
+            }
+
+            // Custom confirmation modal
+            document.getElementById('msg-title').innerText = "Konfirmasi Pengumpulan";
+            document.getElementById('msg-text').innerText = msg;
+            document.getElementById('msg-icon').className = "w-12 h-12 bg-amber-100 text-accent-600 rounded-full flex items-center justify-center mx-auto text-xl";
+            document.getElementById('msg-icon').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            document.getElementById('msg-actions').innerHTML = `
+                <button onclick="closeModal('modal-message')" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm font-semibold">Periksa Lagi</button>
+                <button onclick="closeModal('modal-message'); processExamSubmission();" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow">Ya, Kumpulkan</button>
+            `;
+            openModal('modal-message');
+        }
+
+        function autoSubmitExam() {
+            showMessage('Waktu Habis', 'Waktu ujian telah habis. Sistem akan memproses dan mengumpulkan jawaban Anda secara otomatis.', 'error');
+            setTimeout(() => {
+                closeModal('modal-message');
+                processExamSubmission();
+            }, 2500);
+        }
+
+        function processExamSubmission() {
+            clearInterval(timerInterval);
+            examSubmitted = true;
+
+            // Exit Fullscreen if active
+            try {
+                if (document.exitFullscreen) document.exitFullscreen().catch(err => {});
+            } catch (e) {}
+
+            let totalScore = 0;
+            let totalBenar = 0;
+            let totalSalah = 0;
+            let totalKosong = 0;
+
+            let detailedResults = [];
+
+            shuffledQuestions.forEach(q => {
+                const ans = studentAnswers[q.id];
+                let earnedPoints = 0;
+                let maxPoints = 0;
+                let isCorrectStatus = 'salah';
+
+                if (q.type === 'pg') {
+                    maxPoints = 4;
+                    if (ans !== undefined && ans === q.key) {
+                        earnedPoints = 4;
+                        totalBenar++;
+                        isCorrectStatus = 'benar';
+                    } else if (ans !== undefined) {
+                        totalSalah++;
+                        isCorrectStatus = 'salah';
+                    } else {
+                        totalKosong++;
+                        isCorrectStatus = 'kosong';
+                    }
+                } else if (q.type === 'pgk') {
+                    maxPoints = 6;
+                    if (Array.isArray(ans) && ans.length > 0) {
+                        let correctKeys = q.keys;
+                        let matches = ans.filter(item => correctKeys.includes(item)).length;
+                        let extras = ans.filter(item => !correctKeys.includes(item)).length;
+                        
+                        let scoreRatio = (matches - extras) / correctKeys.length;
+                        if (scoreRatio > 0.8) {
+                            earnedPoints = 6;
+                            totalBenar++;
+                            isCorrectStatus = 'benar';
+                        } else if (scoreRatio > 0) {
+                            earnedPoints = 3;
+                            totalSalah++;
+                            isCorrectStatus = 'sebagian';
+                        } else {
+                            totalSalah++;
+                            isCorrectStatus = 'salah';
+                        }
+                    } else {
+                        totalKosong++;
+                        isCorrectStatus = 'kosong';
+                    }
+                } else if (q.type === 'match') {
+                    maxPoints = 6;
+                    if (typeof ans === 'object' && ans !== null && Object.keys(ans).length > 0) {
+                        let correctPairsCount = 0;
+                        q.pairs.forEach(p => {
+                            if (ans[p.id] === p.right) correctPairsCount++;
+                        });
+                        earnedPoints = (correctPairsCount / q.pairs.length) * 6;
+                        if (earnedPoints === 6) {
+                            totalBenar++;
+                            isCorrectStatus = 'benar';
+                        } else if (earnedPoints > 0) {
+                            totalSalah++;
+                            isCorrectStatus = 'sebagian';
+                        } else {
+                            totalSalah++;
+                            isCorrectStatus = 'salah';
+                        }
+                    } else {
+                        totalKosong++;
+                        isCorrectStatus = 'kosong';
+                    }
+                } else if (q.type === 'isian') {
+                    maxPoints = 5;
+                    if (ans !== undefined && ans.trim() !== '') {
+                        let userClean = ans.trim().toLowerCase();
+                        let matched = q.keys.some(k => k.toLowerCase() === userClean);
+                        if (matched) {
+                            earnedPoints = 5;
+                            totalBenar++;
+                            isCorrectStatus = 'benar';
+                        } else {
+                            totalSalah++;
+                            isCorrectStatus = 'salah';
+                        }
+                    } else {
+                        totalKosong++;
+                        isCorrectStatus = 'kosong';
+                    }
+                }
+
+                totalScore += earnedPoints;
+                detailedResults.push({
+                    qId: q.id,
+                    text: q.text,
+                    type: q.type,
+                    studentAns: ans,
+                    qItem: q,
+                    earned: earnedPoints,
+                    max: maxPoints,
+                    status: isCorrectStatus
+                });
+            });
+
+            const finalGrade = Math.round(totalScore);
+
+            const record = {
+                id: crypto.randomUUID(),
+                nama: currentStudent.nama,
+                kelas: currentStudent.kelas,
+                absen: currentStudent.absen,
+                nilai: finalGrade,
+                benar: totalBenar,
+                salah: totalSalah,
+                kosong: totalKosong,
+                waktuSelesai: new Date().toLocaleString('id-ID'),
+                detailedResults
+            };
+
+            // Save to LocalStorage fallback
+            let history = JSON.parse(localStorage.getItem('bbm_pjok_cbt_history') || '[]');
+            history.push(record);
+            localStorage.setItem('bbm_pjok_cbt_history', JSON.stringify(history));
+
+            // Sync with Firestore Cloud Database
+            if (window.saveResultToCloud) {
+                window.saveResultToCloud(record);
+            }
+
+            // Populate Result UI
+            document.getElementById('res-nama').innerText = currentStudent.nama;
+            document.getElementById('res-kelas').innerText = currentStudent.kelas;
+            document.getElementById('res-absen').innerText = currentStudent.absen;
+            document.getElementById('res-waktu').innerText = new Date().toLocaleTimeString('id-ID');
+            document.getElementById('res-nilai').innerText = finalGrade;
+            document.getElementById('res-benar').innerText = totalBenar;
+            document.getElementById('res-salah').innerText = totalSalah;
+            document.getElementById('res-kosong').innerText = totalKosong;
+
+            const badgeStatus = document.getElementById('res-badge-status');
+            const kategori = document.getElementById('res-kategori');
+            if (finalGrade >= 75) {
+                badgeStatus.innerText = "TUNTAS";
+                badgeStatus.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white";
+                kategori.innerText = finalGrade >= 90 ? "Kategori: Sangat Baik (A)" : "Kategori: Baik (B)";
+            } else {
+                badgeStatus.innerText = "REMEDIAL";
+                badgeStatus.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white";
+                kategori.innerText = "Kategori: Perlu Bimbingan / Remedial";
+            }
+
+            renderPembahasanList(detailedResults);
+
+            switchPage('hasil');
+        }
+
+        let unsubscribeCloud = null;
+
+        function openDashboardGuru() {
+            openModal('modal-dashboard-guru');
+
+            const renderRecords = (records) => {
+                document.getElementById('dash-total-peserta').innerText = records.length;
+
+                if (records.length > 0) {
+                    const totalNilai = records.reduce((sum, item) => sum + item.nilai, 0);
+                    const avg = (totalNilai / records.length).toFixed(1);
+                    const max = Math.max(...records.map(item => item.nilai));
+                    const min = Math.min(...records.map(item => item.nilai));
+                    const tuntasCount = records.filter(item => item.nilai >= 75).length;
+                    const tuntasPct = Math.round((tuntasCount / records.length) * 100);
+
+                    document.getElementById('dash-rata-rata').innerText = avg;
+                    document.getElementById('dash-max-min').innerText = `${max} / ${min}`;
+                    document.getElementById('dash-ketuntasan').innerText = `${tuntasPct}%`;
+
+                    let tbodyHtml = '';
+                    records.forEach((h, idx) => {
+                        tbodyHtml += `
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-semibold">${idx + 1}</td>
+                                <td class="p-3 font-bold text-slate-900">${h.nama}</td>
+                                <td class="p-3">${h.kelas}</td>
+                                <td class="p-3">${h.absen}</td>
+                                <td class="p-3 font-bold text-blue-600">${h.nilai}</td>
+                                <td class="p-3"><span class="text-emerald-600 font-semibold">${h.benar}</span> / <span class="text-red-600 font-semibold">${h.salah}</span></td>
+                                <td class="p-3 text-slate-500 text-xs">${h.waktuSelesai}</td>
+                                <td class="p-3">${h.nilai >= 75 ? '<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded">Tuntas</span>' : '<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">Remedial</span>'}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('dash-table-body').innerHTML = tbodyHtml;
+                } else {
+                    document.getElementById('dash-rata-rata').innerText = '0';
+                    document.getElementById('dash-max-min').innerText = '0 / 0';
+                    document.getElementById('dash-ketuntasan').innerText = '0%';
+                    document.getElementById('dash-table-body').innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 italic">Belum ada data siswa yang mengerjakan ujian.</td></tr>`;
+                }
+            };
+
+            // First render local storage history
+            const localHistory = JSON.parse(localStorage.getItem('bbm_pjok_cbt_history') || '[]');
+            renderRecords(localHistory);
+
+            // Subscribe to real-time cloud data
+            if (window.subscribeCloudResults) {
+                if (unsubscribeCloud) unsubscribeCloud();
+                unsubscribeCloud = window.subscribeCloudResults((cloudRecords) => {
+                    if (cloudRecords && cloudRecords.length > 0) {
+                        renderRecords(cloudRecords);
+                        window.latestRecordsCache = cloudRecords;
+                    }
+                });
+            }
+        }
+
+        function exportToCSV() {
+            let history = window.latestRecordsCache || JSON.parse(localStorage.getItem('bbm_pjok_cbt_history') || '[]');
+            if (history.length === 0) {
+                showMessage('Informasi', 'Belum ada data untuk diekspor.', 'info');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,No,Nama Siswa,Kelas,Absen,Nilai Akhir,Benar,Salah,Tidak Dijawab,Waktu Selesai\n";
+            history.forEach((h, idx) => {
+                csvContent += `${idx + 1},"${h.nama}","${h.kelas}",${h.absen},${h.nilai},${h.benar},${h.salah},${h.kosong},"${h.waktuSelesai}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Rekap_Nilai_CBT_PJOK_Agility_Ladder.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearLocalStorageData() {
+            document.getElementById('msg-title').innerText = "Konfirmasi Hapus Data";
+            document.getElementById('msg-text').innerText = "Apakah Anda yakin ingin menghapus seluruh data rekapitulasi ujian yang tersimpan di perangkat ini?";
+            document.getElementById('msg-icon').className = "w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl";
+            document.getElementById('msg-icon').innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            document.getElementById('msg-actions').innerHTML = `
+                <button onclick="closeModal('modal-message')" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm font-semibold">Batal</button>
+                <button onclick="closeModal('modal-message'); localStorage.removeItem('bbm_pjok_cbt_history'); openDashboardGuru(); showMessage('Berhasil', 'Data lokal berhasil dikosongkan.', 'success');" class="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow">Ya, Hapus</button>
+            `;
+            openModal('modal-message');
+        }
+
+        function verifyGuruAccess() {
+            const inputKode = document.getElementById('input-kode-guru').value.trim();
+            // Default access code is BBN2026
+            if (inputKode === 'BBN2026' || inputKode === 'guru' || inputKode === '1234') {
+                closeModal('modal-guru-auth');
+                document.getElementById('input-kode-guru').value = '';
+                openDashboardGuru();
+            } else {
+                showMessage('Akses Ditolak', 'Kode akses guru tidak valid. Silakan coba lagi.', 'error');
+            }
+        }
+
+        function togglePembahasanView() {
+            const container = document.getElementById('pembahasan-container');
+            const btn = document.getElementById('btn-toggle-pembahasan');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> <span>SEMBUNYIKAN PEMBAHASAN</span>`;
+                container.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                container.classList.add('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-list-check"></i> <span>LIHAT PEMBAHASAN SOAL</span>`;
+            }
+        }
+
+        function renderPembahasanList(detailedResults) {
+            const listContainer = document.getElementById('pembahasan-list');
+            let html = '';
+
+            detailedResults.forEach((item, index) => {
+                const q = item.qItem;
+                let statusBadge = '';
+                if (item.status === 'benar') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-check mr-1"></i> Benar (${item.earned}/${item.max} poin)</span>`;
+                } else if (item.status === 'sebagian') {
+                    statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-minus mr-1"></i> Sebagian Benar (${item.earned}/${item.max} poin)</span>`;
+                } else if (item.status === 'salah') {
+                    statusBadge = `<span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-xmark mr-1"></i> Salah (0/${item.max} poin)</span>`;
+                } else {
+                    statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-circle-minus mr-1"></i> Tidak Dijawab (0/${item.max} poin)</span>`;
+                }
+
+                html += `
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <span class="font-bold text-slate-900 text-sm">Soal No. ${index + 1} (${getQuestionTypeLabel(q.type)})</span>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-slate-800 text-sm font-medium leading-relaxed">${q.text}</p>
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-xs space-y-1.5 text-slate-700">
+                            <p class="font-bold text-blue-900"><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> Pembahasan & Kunci Jawaban:</p>
+                            <p class="text-slate-600 leading-relaxed">${q.pembahasan}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listContainer.innerHTML = html;
+        }
+
+        // Initialize window load
+        window.onload = function() {
+            // Ready
+        }
+    </script>
+</body>
+</html>
